@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
-import { AiOutlineRobot, AiOutlineUser } from "react-icons/ai";
+import { AiOutlineRobot, AiOutlineUser, AiOutlineAudio, AiOutlineSound } from "react-icons/ai";
 import { FiSend } from "react-icons/fi";
 import { PiCopyBold, PiCheckBold } from "react-icons/pi";
-import { HiMicrophone } from "react-icons/hi";
 import axios from "axios";
 
 const Chat = () => {
@@ -12,10 +11,11 @@ const Chat = () => {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
+    const [recording, setRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
 
-    const sendText = async () => {
+    const sendQuery = async () => {
         if (!input.trim() || loading) return;
 
         const userMessage = { role: "user", content: input };
@@ -37,7 +37,7 @@ const Chat = () => {
                 ...newMessages,
                 {
                     role: "assistant",
-                    content: "⚠️ Error: Could not reach server.",
+                    content: "\u26a0\ufe0f Error: Could not reach server.",
                 },
             ]);
         }
@@ -45,10 +45,67 @@ const Chat = () => {
         setLoading(false);
     };
 
+    const speechToText = async () => {
+        if (recording) {
+            mediaRecorderRef.current.stop();
+            setRecording(false);
+        } else {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorderRef.current = mediaRecorder;
+                audioChunksRef.current = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunksRef.current.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+
+                    const formData = new FormData();
+                    formData.append("voice", audioBlob);
+
+                    try {
+                        const response = await axios.post("http://localhost:5000/api/v1/speech-to-text", formData);
+                        const { text } = response.data;
+                        setInput(text);
+                    } catch (error) {
+                        alert("\u26a0\ufe0f Failed to process voice input.");
+                    }
+                };
+
+                mediaRecorder.start();
+                setRecording(true);
+            } catch (err) {
+                alert("\u26a0\ufe0f Microphone access denied or unavailable.");
+            }
+        }
+    };
+
+    const textToSpeech = async (text) => {
+        try {
+            const response = await axios.post(
+                "http://localhost:5000/api/v1/text-to-speech",
+                { text },
+                { responseType: "blob" }
+            );
+
+            const audioBlob = new Blob([response.data], { type: "audio/mp3" });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+        } catch (error) {
+            alert("\u26a0\ufe0f Failed to play audio.");
+        }
+    };
+
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            sendText();
+            sendQuery();
         }
     };
 
@@ -58,71 +115,13 @@ const Chat = () => {
         setTimeout(() => setCopiedIndex(null), 2000);
     };
 
-    const sendVoice = async () => {
-        if (loading) return;
-
-        try {
-            setLoading(true);
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorderRef.current = new MediaRecorder(stream);
-            audioChunksRef.current = [];
-
-            mediaRecorderRef.current.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    audioChunksRef.current.push(e.data);
-                }
-            };
-
-            mediaRecorderRef.current.onstop = async () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-
-                // Prepare form data
-                const formData = new FormData();
-                formData.append("audio", audioBlob, "voice.webm");
-
-                try {
-                    const response = await axios.post("http://localhost:5000/api/v1/voice", formData, {
-                        headers: {
-                            "Content-Type": "multipart/form-data",
-                        },
-                    });
-
-                    // For now, simulate dummy response
-                    // const { text } = response.data;
-                    const text = "This is a dummy transcribed message from voice.";
-                    setInput(text);
-                } catch (err) {
-                    console.error(err);
-                    setInput("⚠️ Error: Voice processing failed.");
-                }
-
-                setLoading(false);
-            };
-
-            // Start recording
-            mediaRecorderRef.current.start();
-
-            // Stop after 5 seconds
-            setTimeout(() => {
-                mediaRecorderRef.current.stop();
-            }, 5000);
-        } catch (err) {
-            console.error(err);
-            setLoading(false);
-        }
-    };
-
     return (
         <div className="flex flex-col h-screen bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-            {/* Header */}
             <header className="p-4 shadow-md bg-slate-950/70 backdrop-blur-sm text-center text-2xl font-bold tracking-wide border-b border-slate-700">
                 Cortex
             </header>
 
-            {/* Chat Area */}
-            <main className="flex-1 overflow-y-auto px-4 py-6 w-full flex justify-center
-                scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg
-                scrollbar-hover:scrollbar-thumb-indigo-500 scrollbar-active:scrollbar-thumb-indigo-500">
+            <main className="flex-1 overflow-y-auto px-4 py-6 w-full flex justify-center scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg scrollbar-hover:scrollbar-thumb-indigo-500 scrollbar-active:scrollbar-thumb-indigo-500">
                 <div className="w-full max-w-[700px] space-y-6">
                     {messages.map((msg, idx) => (
                         <div
@@ -143,10 +142,18 @@ const Chat = () => {
                                         }`}
                                 >
                                     {msg.role === "assistant" && (
-                                        <div className="flex justify-end text-xs text-slate-300 hover:text-white transition cursor-pointer mb-2"
-                                             onClick={() => handleCopy(msg.content, idx)}
-                                        >
-                                            <div className="flex items-center gap-1">
+                                        <div className="flex justify-between items-center text-xs text-slate-300 mb-2">
+                                            <button
+                                                onClick={() => textToSpeech(msg.content)}
+                                                className="hover:text-white transition flex items-center gap-1 cursor-pointer"
+                                            >
+                                                <AiOutlineSound size={14} />
+                                                <span>Listen</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleCopy(msg.content, idx)}
+                                                className="hover:text-white transition flex items-center gap-1 cursor-pointer"
+                                            >
                                                 {copiedIndex === idx ? (
                                                     <>
                                                         <PiCheckBold size={14} />
@@ -158,7 +165,7 @@ const Chat = () => {
                                                         <span>Copy</span>
                                                     </>
                                                 )}
-                                            </div>
+                                            </button>
                                         </div>
                                     )}
                                     <div>{msg.content}</div>
@@ -184,7 +191,6 @@ const Chat = () => {
                 </div>
             </main>
 
-            {/* Input Box */}
             <footer className="bg-slate-950/70 backdrop-blur-sm p-5 border-t border-slate-700">
                 <div className="flex items-center w-full max-w-[700px] mx-auto gap-2">
                     <textarea
@@ -199,28 +205,41 @@ const Chat = () => {
                             cursor-default scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg
                             scrollbar-hover:scrollbar-thumb-indigo-500 scrollbar-active:scrollbar-thumb-indigo-500"
                     />
-                    {/* Microphone Button */}
+
                     <button
-                        onClick={sendVoice}
+                        onClick={speechToText}
                         disabled={loading}
-                        className={`p-3 rounded-full transition 
-                            ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700"}`}
-                        title="Record Voice"
+                        className={`p-3 rounded-full transition ${recording ? "bg-red-600 animate-pulse" : "bg-slate-700 hover:bg-slate-600"} cursor-pointer`}
                     >
-                        <HiMicrophone size={20} className="text-white" />
+                        <AiOutlineAudio size={20} className="text-white" />
                     </button>
 
-                    {/* Send Button */}
                     <button
-                        onClick={sendText}
+                        onClick={sendQuery}
                         disabled={loading}
                         className={`p-3 rounded-full transition 
-                            ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700"}`}
-                        title="Send Text"
+                            ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 cursor-pointer"}`}
                     >
                         <FiSend size={20} className="text-white" />
                     </button>
                 </div>
+
+                {recording && (
+                    <div className="flex justify-center mt-2">
+                        <div className="flex gap-1 items-end h-6">
+                            {[...Array(10)].map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="w-1 bg-indigo-400 animate-pulse"
+                                    style={{
+                                        height: `${Math.random() * 24 + 8}px`,
+                                        animationDelay: `${i * 0.05}s`,
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </footer>
         </div>
     );
