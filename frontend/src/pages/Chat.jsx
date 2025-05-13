@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { AiOutlineRobot, AiOutlineUser, AiOutlineAudio, AiOutlineSound, AiOutlinePlayCircle, AiOutlinePauseCircle } from "react-icons/ai";
+import {
+    AiOutlineRobot,
+    AiOutlineUser,
+    AiOutlineAudio,
+    AiOutlineSound,
+} from "react-icons/ai";
 import { FiSend } from "react-icons/fi";
 import { PiCopyBold, PiCheckBold } from "react-icons/pi";
 import axios from "axios";
@@ -19,34 +24,16 @@ const Chat = () => {
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const [playingIndex, setPlayingIndex] = useState(null);
-    const [audioInstance, setAudioInstance] = useState(null);
-    const [paused, setPaused] = useState(false);
-
+    const audioRef = useRef(null);
 
     useEffect(() => {
-        (async () => {
-            try {
-                const response = await axios.post(
-                    "/api/v1/text-to-speech",
-                    { text: "Namaste! I am Pragya. How can I assist you today?" },
-                    { responseType: "blob" }
-                );
-
-                const audioBlob = new Blob([response.data], { type: "audio/mp3" });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audio = new Audio(audioUrl);
-                audio.play();
-            } catch (error) {
-                alert("\u26a0\ufe0f Failed to play audio.");
-            }
-        })();
+        playTextToSpeech("Namaste! I am Pragya. How can I assist you today?", 0);
     }, []);
 
     const sendQuery = async () => {
         if (!input.trim() || loading) return;
 
         const userMessage = { role: "user", content: input };
-        console.log(userMessage);
         const newMessages = [...messages, userMessage];
         setMessages(newMessages);
         setInput("");
@@ -79,9 +66,7 @@ const Chat = () => {
             setRecording(false);
         } else {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const mediaRecorder = new MediaRecorder(stream);
                 mediaRecorderRef.current = mediaRecorder;
                 audioChunksRef.current = [];
@@ -101,26 +86,29 @@ const Chat = () => {
                     formData.append("audio_file", audioBlob);
 
                     try {
-                        const response = await axios.post(
-                            "/api/v1/speech-to-text",
-                            formData
-                        );
+                        const response = await axios.post("/api/v1/speech-to-text", formData);
                         const { text } = response.data;
                         setInput(text);
                     } catch (error) {
-                        alert("\u26a0\ufe0f Failed to process voice input.");
+                        alert("⚠️ Failed to process voice input.");
                     }
                 };
 
                 mediaRecorder.start();
                 setRecording(true);
             } catch (err) {
-                alert("\u26a0\ufe0f Microphone access denied or unavailable.");
+                alert("⚠️ Microphone access denied or unavailable.");
             }
         }
     };
 
-    const textToSpeech = async (text) => {
+    const playTextToSpeech = async (text, index) => {
+        if (playingIndex === index && audioRef.current) {
+            audioRef.current.pause();
+            setPlayingIndex(null);
+            return;
+        }
+
         try {
             const response = await axios.post(
                 "/api/v1/text-to-speech",
@@ -131,9 +119,18 @@ const Chat = () => {
             const audioBlob = new Blob([response.data], { type: "audio/mp3" });
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
+
+            if (audioRef.current) {
+                audioRef.current.pause();
+            }
+
+            audioRef.current = audio;
+            setPlayingIndex(index);
+
+            audio.onended = () => setPlayingIndex(null);
             audio.play();
         } catch (error) {
-            alert("\u26a0\ufe0f Failed to play audio.");
+            alert("⚠️ Failed to play audio.");
         }
     };
 
@@ -157,20 +154,19 @@ const Chat = () => {
                     className="text-5xl font-normal text-white tracking-wider drop-shadow-md"
                     style={{
                         fontFamily: "'Great Vibes', cursive",
-                        textShadow: "0 0 6px rgba(99, 102, 241, 0.6)", // soft indigo glow
+                        textShadow: "0 0 6px rgba(99, 102, 241, 0.6)",
                     }}
                 >
                     Pragya
                 </h1>
             </header>
 
-            <main className="flex-1 overflow-y-auto px-4 py-6 w-full flex justify-center scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg scrollbar-hover:scrollbar-thumb-indigo-500 scrollbar-active:scrollbar-thumb-indigo-500">
+            <main className="flex-1 overflow-y-auto px-4 py-6 w-full flex justify-center scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg">
                 <div className="w-full max-w-[700px] space-y-6">
                     {messages.map((msg, idx) => (
                         <div
                             key={idx}
-                            className={`flex items-start gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"
-                                }`}
+                            className={`flex items-start gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                         >
                             {msg.role === "assistant" && (
                                 <div className="bg-slate-700 p-2 rounded-full shrink-0">
@@ -180,7 +176,7 @@ const Chat = () => {
                             <div className="relative max-w-[80%]">
                                 <div
                                     className={`px-4 py-3 rounded-2xl shadow-lg break-words overflow-x-hidden
-                                        ${msg.role === "user"
+                                    ${msg.role === "user"
                                             ? "bg-indigo-600 text-white rounded-br-sm"
                                             : "bg-slate-700 text-white border border-slate-600 rounded-bl-sm"
                                         }`}
@@ -188,29 +184,21 @@ const Chat = () => {
                                     {msg.role === "assistant" && (
                                         <div className="flex justify-between items-center text-xs text-slate-300 mb-2">
                                             <button
-                                                onClick={() => textToSpeech(msg.content, idx)}
+                                                onClick={() => playTextToSpeech(msg.content, idx)}
                                                 className="hover:text-white transition flex items-center gap-1 cursor-pointer"
                                             >
                                                 {playingIndex === idx ? (
-                                                    paused ? (
-                                                        <>
-                                                            <AiOutlinePlayCircle size={16} />
-                                                            <span>Play</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <AiOutlinePauseCircle size={16} />
-                                                            <span>Pause</span>
-                                                        </>
-                                                    )
+                                                    <>
+                                                        <span>⏸️</span>
+                                                        <span>Pause</span>
+                                                    </>
                                                 ) : (
                                                     <>
-                                                        <AiOutlineSound size={14} />
-                                                        <span>Listen</span>
+                                                        <span>▶️</span>
+                                                        <span>Play</span>
                                                     </>
                                                 )}
                                             </button>
-
                                             <button
                                                 onClick={() => handleCopy(msg.content, idx)}
                                                 className="hover:text-white transition flex items-center gap-1 cursor-pointer"
@@ -263,16 +251,15 @@ const Chat = () => {
                         disabled={loading}
                         className="flex-1 min-h-[60px] max-h-[200px] resize-none px-4 py-3 rounded-xl bg-slate-800 text-white
                             border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400
-                            cursor-default scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg
-                            scrollbar-hover:scrollbar-thumb-indigo-500 scrollbar-active:scrollbar-thumb-indigo-500"
+                            cursor-default scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg"
                     />
 
                     <button
                         onClick={speechToText}
                         disabled={loading}
                         className={`p-3 rounded-full transition ${recording
-                            ? "bg-red-600 animate-pulse"
-                            : "bg-slate-700 hover:bg-slate-600"
+                                ? "bg-red-600 animate-pulse"
+                                : "bg-slate-700 hover:bg-slate-600"
                             } cursor-pointer`}
                     >
                         <AiOutlineAudio size={20} className="text-white" />
