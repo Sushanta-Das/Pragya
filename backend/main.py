@@ -1,3 +1,4 @@
+
 from langchain_openai import AzureChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate
@@ -60,7 +61,7 @@ def create_vectorstore(text):
     return FAISS.from_documents(docs, embedding)
 
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-vectorstore = create_vectorstore("test")
+vectorstore = create_vectorstore("Currently Document is empty .If user asks about what you can do then assistant can initiate the conversation by saying that I am an assistant and I can help with Summarization and Quering a youtube video given youtube link and target language (optional) of the summary.  Otherwise answer question asked by user ")
 retriever = vectorstore.as_retriever()
 
 template = """
@@ -86,7 +87,7 @@ def detect_summary_intent_llm(message: str) -> dict:
     Given a user message, identify:
     1. If the user wants a summary of a YouTube video (True/False).
     2. The YouTube video URL (if any).
-    3. The target language of the summary (default to "en" if not mentioned).
+    3. The target language of the summary (default to "english" if not mentioned).
 
     Respond only in JSON format with keys: "summary_intent" (bool), "video_url" (string or null), "language" (string)."""),
         HumanMessage(message),
@@ -99,7 +100,7 @@ def detect_summary_intent_llm(message: str) -> dict:
     try:
         return json.loads(content)
     except json.JSONDecodeError:
-        return {"summary_intent": False, "video_url": None, "language": "en"}
+        return {"summary_intent": False, "video_url": None, "language": "english"}
 
 def response_chat(question: str) -> str:
     history = memory.load_memory_variables({})["chat_history"]
