@@ -58,7 +58,7 @@ def split_text(text, max_chars=500000):
 #use azure openai to detect language
 def language_detect(text,target_lang):
     template = """
-    Detect the language of the following text and return "true"  if the text is in {target_lang} language, otherwise return "false" : {text}
+    return "true"  if the following text is in {target_lang} language, otherwise return "false" : {text}
     """
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | llm
@@ -70,7 +70,8 @@ def language_detect(text,target_lang):
 
 
 def summarize_with_translation(text, target_lang="english"):
-
+    response_translation=chain_translation.invoke({"text": text, "target_lang": target_lang})
+    text=response_translation.content
     chunks = split_text(text)
     print(f"Number of chunks: {len(chunks)}")
     partial_summaries = []
@@ -87,9 +88,9 @@ def summarize_with_translation(text, target_lang="english"):
         final_summary = " ".join(partial_summaries)
         response= chain_final_summary.invoke({"target_lang": target_lang, "final_summary": final_summary})
 
-    if language_detect(response.content[0:100],target_lang) == "false":
-        # If the text is not in the target language, translate it first
-        print("Translating text to target language...")
-        response = chain_translation.invoke({"text": response.content, "target_lang": target_lang})
+    # if language_detect(response.content[0:100],target_lang) == "false":
+    #     # If the text is not in the target language, translate it first
+    #     print("Translating text to target language...")
+    #     response = chain_translation.invoke({"text": response.content, "target_lang": target_lang})
     
     return  response.content
