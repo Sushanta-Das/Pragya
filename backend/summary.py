@@ -35,7 +35,7 @@ prompt_final_summary = ChatPromptTemplate.from_template(template_final_summary)
 chain_chunks_summary = prompt_chunks_summary | llm
 chain_final_summary = prompt_final_summary | llm 
 
-prompt_translation = """ return the following text : {text} into {target_lang} language  """
+prompt_translation = """ return the following text : {text} into {target_lang} language . If already in same language then return the text given """
 chain_translation = ChatPromptTemplate.from_template(prompt_translation) | llm
 
 # As GPT has a limit of context length of 128000 tokens, we need to split the text into smaller chunks  . each token approximately consists of 4 characters
@@ -72,6 +72,7 @@ def language_detect(text,target_lang):
 def summarize_with_translation(text, target_lang="english"):
     # response_translation=chain_translation.invoke({"text": text, "target_lang": target_lang})
     # text=response_translation.content
+    # print(text)
     chunks = split_text(text)
     print(f"Number of chunks: {len(chunks)}")
     partial_summaries = []
@@ -93,5 +94,5 @@ def summarize_with_translation(text, target_lang="english"):
     print(f"Translating text to target language...{target_lang}")
     
     response = chain_translation.invoke({"text": response.content, "target_lang": target_lang})
-    
+    # print("response",response.content)
     return  response.content

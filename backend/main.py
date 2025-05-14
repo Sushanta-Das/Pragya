@@ -103,9 +103,9 @@ def detect_summary_intent_llm(message: str) -> dict:
 
 def response_chat(question: str) -> str:
     history = memory.load_memory_variables({})["chat_history"]
-    print("history",history)
+    # print("history",history)
     docs = retriever.get_relevant_documents(question)
-    print("docs",docs)
+    # print("docs",docs)
     if not docs:
         context = "No relevant documents found."
     else:
@@ -123,6 +123,7 @@ def response_chat(question: str) -> str:
 def ask(question):
 
     summary_req= detect_summary_intent_llm(question)
+    print("summary_req",summary_req)
     if summary_req['video_url'] is not None :
         video_transcript= get_transcript(summary_req["video_url"])
         #save video transcript to vectorstore
@@ -134,6 +135,7 @@ def ask(question):
                 summary=summarize_with_translation(video_transcript, target_lang=summary_req["language"])
             else:
                 summary=summarize_with_translation(video_transcript)
+            memory.save_context({"input": question}, {"output":summary })    
             return summary    
         else :
             response= response_chat(question)
