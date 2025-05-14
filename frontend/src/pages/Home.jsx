@@ -1,41 +1,62 @@
+import { LuArrowRight } from "react-icons/lu";
+import { Link } from "react-router";
+import Card from "../components/Card.jsx";
+
+const features = [
+    {
+        title: "Multilingual Summaries",
+        description: "Submit YouTube URLs in any language and receive concise summaries in your preferred language.",
+    },
+
+    {
+        title: "Conversational Insights",
+        description: "Ask questions based on generated summaries — Pragya responds intelligently.",
+    },
+
+    {
+        title: "Voice Input Support",
+        description: "Speak your queries directly using the microphone for a hands-free experience.",
+    },
+
+    {
+        title: "Voice Response Output",
+        description: "Listen to Pragya's answers with seamless voice response integration.",
+    }
+];
+
 const Home = () => {
-  return (
-    <div className="h-screen flex flex-col bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
-      {/* Top Half - Video */}
-      <div className="flex-1 relative">
-        <video
-          src="/videos/video1.mp4"
-          autoPlay
-          loop
-          muted
-          className="w-full h-full object-cover"
-        />
+    return (
+        <div className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white h-screen pt-10 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg scrollbar-hover:scrollbar-thumb-indigo-300 scrollbar-active:scrollbar-thumb-indigo-400">
     
-        <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" />
-      </div>
+            <div>
+                <video
+                    className="w-full shadow-xl"
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    src="/videos/video1.mp4"
+                />
+            </div>
 
-      {/* Bottom Half - Image and Button */}
-      <div className="flex flex-col md:flex-row h-1/2">
-        {/* Left: Image */}
-        <div className="flex-1">
-          <img
-            src="images/image1.png"
-            alt="Illustration"
-            className="w-full h-full object-cover"
-          />
+            <section className="py-16 px-4 text-center">
+                <h2 className="text-4xl font-medium mb-12">Why Choose Pragya?</h2>
+                <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+                    {features.map((feature, index) => (
+                        <Card index={index} feature={feature} />
+                    ))}
+                </div>
+            </section>
+
+            <div className="flex justify-center pb-14">
+                <Link to="/chat">
+                    <button className="flex items-center gap-2 text-xl px-10 py-6 rounded-full shadow-lg bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:scale-105 transition-transform cursor-pointer">
+                        Get Started <LuArrowRight className="w-5 h-5" />
+                    </button>
+                </Link>
+            </div>
         </div>
+    );
+};
 
-        {/* Right: Get Started Button */}
-        <div className="flex-1 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm border-t border-slate-700">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-xl rounded-xl shadow-lg transition"
-          >
-            Get Started
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default Home
+export default Home;

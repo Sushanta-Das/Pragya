@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import {
-    AiOutlineRobot,
-    AiOutlineUser,
-    AiOutlineAudio,
-    AiOutlineSound,
-} from "react-icons/ai";
+import { AiOutlineRobot, AiOutlineUser, AiOutlineAudio } from "react-icons/ai";
 import { FiSend } from "react-icons/fi";
 import { PiCopyBold, PiCheckBold } from "react-icons/pi";
 import axios from "axios";
@@ -148,20 +143,8 @@ const Chat = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-            <header className="p-4 shadow-md bg-slate-950/70 backdrop-blur-sm text-center border-b border-slate-700">
-                <h1
-                    className="text-5xl font-normal text-white tracking-wider drop-shadow-md"
-                    style={{
-                        fontFamily: "'Great Vibes', cursive",
-                        textShadow: "0 0 6px rgba(99, 102, 241, 0.6)",
-                    }}
-                >
-                    Pragya
-                </h1>
-            </header>
-
-            <main className="flex-1 overflow-y-auto px-4 py-6 w-full flex justify-center scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg">
+        <div className="flex flex-col h-screen bg-slate-900 text-white overflow-hidden pt-20 pb-36">
+            <main className="flex-1 overflow-y-auto px-4 py-6 w-full flex justify-center scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg scrollbar-hover:scrollbar-thumb-indigo-300 scrollbar-active:scrollbar-thumb-indigo-400">
                 <div className="w-full max-w-[700px] space-y-6">
                     {messages.map((msg, idx) => (
                         <div
@@ -240,7 +223,7 @@ const Chat = () => {
                 </div>
             </main>
 
-            <footer className="bg-slate-950/70 backdrop-blur-sm p-5 border-t border-slate-700">
+            <footer className="fixed bottom-0 w-full pb-5">
                 <div className="flex items-center w-full max-w-[700px] mx-auto gap-2">
                     <textarea
                         rows={2}
@@ -251,7 +234,7 @@ const Chat = () => {
                         disabled={loading}
                         className="flex-1 min-h-[60px] max-h-[200px] resize-none px-4 py-3 rounded-xl bg-slate-800 text-white
                             border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400
-                            cursor-default scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg"
+                            cursor-default scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent scrollbar-thumb-rounded-lg scrollbar-hover:scrollbar-thumb-indigo-300 scrollbar-active:scrollbar-thumb-indigo-400"
                     />
 
                     <button
@@ -277,6 +260,8 @@ const Chat = () => {
                         <FiSend size={20} className="text-white" />
                     </button>
                 </div>
+
+                <p className="text-center text-xs text-slate-400 mt-3 pr-36"> Pragya can make mistakes. Check important info. </p>
 
                 {recording && (
                     <div className="flex justify-center mt-2">
