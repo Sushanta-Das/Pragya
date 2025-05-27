@@ -1,5 +1,5 @@
 # 🎥 YouTube AI Assistant  
-A full-stack AI-powered application that summarizes and answers questions from YouTube videos using Azure OpenAI, Whisper, and LangChain.
+A full-stack AI-powered application that summarizes and answers questions in many different languages from YouTube videos using Azure OpenAI, Whisper, and LangChain.
 
 ---
 
@@ -45,6 +45,15 @@ npm run dev
 ```
 
 ---
+### Demo
+![Screenshot (543)](https://github.com/user-attachments/assets/eb90fb65-2f80-4624-b70c-da76cacbdec1)
+
+![Screenshot (548)](https://github.com/user-attachments/assets/c116c803-17a5-4484-9461-89d57d14e7d4)
+
+
+
+
+
 
 ## 🛠️ Tech Stack
 
