@@ -40,6 +40,7 @@ chain_translation = ChatPromptTemplate.from_template(prompt_translation) | llm
 
 # As GPT has a limit of context length of 128000 tokens, we need to split the text into smaller chunks  . each token approximately consists of 4 characters
 def split_text(text, max_chars=500000):
+
     """Splits a long text into smaller parts by sentences."""
     import re
     sentences = re.split(r'(?<=[.!?]) +', text)
@@ -72,7 +73,7 @@ def language_detect(text,target_lang):
 def summarize_with_translation(text, target_lang="english"):
     # response_translation=chain_translation.invoke({"text": text, "target_lang": target_lang})
     # text=response_translation.content
-    # print(text)
+    print("transscript",text)
     chunks = split_text(text)
     print(f"Number of chunks: {len(chunks)}")
     partial_summaries = []
