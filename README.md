@@ -1,4 +1,4 @@
-# 🎥 YouTube AI Assistant  
+# 🎥 Pragya - YouTube AI Assistant  
 A full-stack AI-powered application that summarizes and answers questions in many different languages from YouTube videos using Azure OpenAI, Whisper, and LangChain.
 
 ---
