@@ -91,6 +91,3 @@ npm run dev
 - Audio output with Azure TTS  
 
 ---
-
-## 📄 License
-MIT License – use freely, credit appreciated.
