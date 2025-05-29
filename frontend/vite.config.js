@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      "/api": "http://127.0.0.1:5000",
+      "/api": "https://de15-2409-40e0-f-6366-e486-3377-22f4-7c6f.ngrok-free.app",
     },
   },
 });
