@@ -35,7 +35,7 @@ const Chat = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post("/api/v1/query", {
+            const response = await axios.post("https://de15-2409-40e0-f-6366-e486-3377-22f4-7c6f.ngrok-free.app/api/v1/query", {
                 question: userMessage.content,
             });
             setMessages([
@@ -81,7 +81,7 @@ const Chat = () => {
                     formData.append("audio_file", audioBlob);
 
                     try {
-                        const response = await axios.post("/api/v1/speech-to-text", formData);
+                        const response = await axios.post("https://de15-2409-40e0-f-6366-e486-3377-22f4-7c6f.ngrok-free.app/api/v1/speech-to-text", formData);
                         const { text } = response.data;
                         setInput(text);
                     } catch (error) {
@@ -106,7 +106,7 @@ const Chat = () => {
 
         try {
             const response = await axios.post(
-                "/api/v1/text-to-speech",
+                "https://de15-2409-40e0-f-6366-e486-3377-22f4-7c6f.ngrok-free.app/api/v1/text-to-speech",
                 { text },
                 { responseType: "blob" }
             );
